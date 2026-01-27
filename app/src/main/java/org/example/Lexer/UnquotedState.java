@@ -1,7 +1,7 @@
 package org.example.Lexer;
 
 import org.example.Lexer.Token.TokenType;
-import org.example.RedirectType;
+import org.example.Parser.RedirectType;
 
 public final class UnquotedState implements LexerState {
 

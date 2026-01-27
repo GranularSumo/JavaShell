@@ -4,8 +4,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.text.ParseException;
 
-import org.example.IoContext.Owns;
+import org.example.Evaluator.IoContext;
+import org.example.Evaluator.IoContext.Owns;
+import org.example.Parser.Parser;
 
 public class Shell {
 
@@ -39,7 +42,12 @@ public class Shell {
           continue;
         }
 
-        // Parser.tokenize(input);
+        try {
+          ctx.out().println(Parser.parse(input));
+        } catch (ParseException e) {
+          ctx.err().println(e.getMessage());
+          ctx.err().flush();
+        }
       }
     } catch (IOException e) {
       ctx.err().println("I/O error: " + e.getMessage());

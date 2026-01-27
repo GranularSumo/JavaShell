@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 
+import org.example.Evaluator.IoContext;
+
 public class ShellContext {
   private final IoContext io;
   private CwdState cwdState = new CwdState(Path.of(System.getProperty("user.dir")));
