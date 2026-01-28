@@ -8,3 +8,4 @@ build
 app/bin
 .project
 app/.classpath
+bin

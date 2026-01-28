@@ -7,4 +7,4 @@ set -e # Exit early if any commands fail
   ./gradlew -q jar
 )
 
-exec java --enable-preview --enable-native-access=ALL-UNNAMED -jar /tmp/jshell-build/jshell.jar "$@"
+exec java --enable-preview --enable-native-access=ALL-UNNAMED -jar /tmp/javashell-build/javashell.jar "$@"
