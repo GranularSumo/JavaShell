@@ -6,4 +6,8 @@ public record Redirect(RedirectType type, Word target) {
       throw new IllegalArgumentException("Redirect type and target cannot be null");
     }
   }
+
+  public boolean isAppendMode() {
+    return (type == RedirectType.OUTPUT_APPEND || type == RedirectType.ERROR_APPEND || type == RedirectType.ALL_APPEND);
+  }
 }

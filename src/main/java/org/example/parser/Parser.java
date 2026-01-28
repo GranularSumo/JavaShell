@@ -12,7 +12,7 @@ public class Parser {
   private int currentIndex = 0;
 
   public Parser(String input) {
-    tokenList = Lexer.tokenize(input);
+    tokenList = Lexer.tokenize(input.trim());
   }
 
   public static Command parse(String input) throws ParseException {

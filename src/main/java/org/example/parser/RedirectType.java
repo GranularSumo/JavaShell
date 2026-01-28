@@ -42,4 +42,5 @@ public enum RedirectType {
   public static boolean isValidRedirectType(String redirect) {
     return LOOKUP.containsKey(redirect);
   }
+
 }

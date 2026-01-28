@@ -49,10 +49,34 @@ tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
     testLogging {
-        events "passed", "skipped", "failed"
-        exceptionFormat "full"
-        showStandardStreams = true
-      }
+        // Only show test summary, not individual tests
+        events "failed", "skipped"  // Don't include "passed"
+        exceptionFormat "short"
+        showStandardStreams = false
+        
+        // Hide test lifecycle events
+        lifecycle {
+            events "failed", "skipped"
+        }
+        
+        // Format test output
+        afterSuite { desc, result ->
+            if (!desc.parent) { // Only show for the root suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests"
+                if (result.successfulTestCount > 0) {
+                    output += ", ${result.successfulTestCount} passed"
+                }
+                if (result.failedTestCount > 0) {
+                    output += ", ${result.failedTestCount} failed"
+                }
+                if (result.skippedTestCount > 0) {
+                    output += ", ${result.skippedTestCount} skipped"
+                }
+                output += ")"
+                println '\n' + output
+            }
+        }
+    }
 }
 
 tasks.named('run') {

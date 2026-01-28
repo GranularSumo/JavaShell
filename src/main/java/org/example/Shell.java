@@ -4,18 +4,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.text.ParseException;
 
+import org.example.commands.Builtins;
+import org.example.evaluator.Evaluator;
 import org.example.evaluator.IoContext;
 import org.example.evaluator.IoContext.Owns;
-import org.example.parser.Parser;
 
 public class Shell {
 
   private ShellContext ctx;
+  private Evaluator evaluator;
 
   public Shell(ShellContext ctx) {
     this.ctx = ctx;
+    evaluator = new Evaluator(ctx, new Builtins());
   }
 
   public static void main(String[] args) {
@@ -42,12 +44,7 @@ public class Shell {
           continue;
         }
 
-        try {
-          ctx.out().println(Parser.parse(input));
-        } catch (ParseException e) {
-          ctx.err().println(e.getMessage());
-          ctx.err().flush();
-        }
+        evaluator.evaluate(input, ctx);
       }
     } catch (IOException e) {
       ctx.err().println("I/O error: " + e.getMessage());
