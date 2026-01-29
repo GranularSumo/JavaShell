@@ -20,7 +20,7 @@ public class Shell {
     evaluator = new Evaluator(ctx, new Builtins());
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
     PrintWriter out = new PrintWriter(System.out);
     PrintWriter err = new PrintWriter(System.err);

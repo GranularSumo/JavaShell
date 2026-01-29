@@ -54,12 +54,6 @@ tasks.named('test') {
         exceptionFormat "short"
         showStandardStreams = false
         
-        // Hide test lifecycle events
-        lifecycle {
-            events "failed", "skipped"
-        }
-        
-        // Format test output
         afterSuite { desc, result ->
             if (!desc.parent) { // Only show for the root suite
                 def output = "Results: ${result.resultType} (${result.testCount} tests"

@@ -7,10 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
+import org.example.evaluator.IoContext;
 import org.example.evaluator.RedirectBuilder;
+import org.example.evaluator.IoContext.Owns;
 import org.example.parser.Redirect;
 import org.example.parser.RedirectType;
 import org.example.parser.Word;
@@ -32,10 +36,19 @@ class RedirectBuilderProcessTest {
         "echo 'stdout:" + message + "'; echo 'stderr:" + message + "' >&2");
   }
 
+  private IoContext createDefaultIoContext() {
+    return new IoContext(
+        new BufferedReader(new InputStreamReader(System.in)),
+        new PrintWriter(System.out),
+        new PrintWriter(System.err),
+        Owns.NONE
+    );
+  }
+
   @Test
   void applyToProcess_nullRedirect_inheritsIO() throws IOException, InterruptedException {
     ProcessBuilder builder = createEchoCommand("test");
-    RedirectBuilder.applyToProcess(null, builder);
+    RedirectBuilder.applyAllToProcess(List.of(), builder, createDefaultIoContext());
 
     Process process = builder.start();
     process.waitFor();
@@ -47,17 +60,20 @@ class RedirectBuilderProcessTest {
   void applyToProcess_inputRedirect_setsInputFile() throws IOException, InterruptedException {
     Path inputFile = tempDir.resolve("input.txt");
     Files.writeString(inputFile, "hello from file");
+    
+    Path outputFile = tempDir.resolve("output.txt");
 
-    ProcessBuilder builder = new ProcessBuilder("cat");
-    Redirect redirect = createRedirect(RedirectType.INPUT, inputFile.toString());
-    RedirectBuilder.applyToProcess(redirect, builder);
+    // Use a command that reads input and writes to output to verify input redirection works
+    ProcessBuilder builder = new ProcessBuilder("sh", "-c", "cat > " + outputFile.toString());
+    Redirect inputRedirect = createRedirect(RedirectType.INPUT, inputFile.toString());
+    RedirectBuilder.applyAllToProcess(List.of(inputRedirect), builder, createDefaultIoContext());
 
     Process process = builder.start();
-    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-    String output = reader.readLine();
-    process.waitFor();
+    int exitCode = process.waitFor();
 
-    assertEquals("hello from file", output);
+    assertEquals(0, exitCode);
+    // If input redirection works, the content should be copied to output file
+    assertEquals("hello from file", Files.readString(outputFile).trim());
   }
 
   @Test
@@ -66,7 +82,7 @@ class RedirectBuilderProcessTest {
 
     ProcessBuilder builder = createEchoCommand("test output");
     Redirect redirect = createRedirect(RedirectType.OUTPUT, outputFile.toString());
-    RedirectBuilder.applyToProcess(redirect, builder);
+    RedirectBuilder.applyAllToProcess(List.of(redirect), builder, createDefaultIoContext());
 
     Process process = builder.start();
     process.waitFor();
@@ -82,7 +98,7 @@ class RedirectBuilderProcessTest {
 
     ProcessBuilder builder = createEchoCommand("test error");
     Redirect redirect = createRedirect(RedirectType.ERROR, errorFile.toString());
-    RedirectBuilder.applyToProcess(redirect, builder);
+    RedirectBuilder.applyAllToProcess(List.of(redirect), builder, createDefaultIoContext());
 
     Process process = builder.start();
     process.waitFor();
@@ -98,7 +114,7 @@ class RedirectBuilderProcessTest {
 
     ProcessBuilder builder = createEchoCommand("test all");
     Redirect redirect = createRedirect(RedirectType.ALL_OUTPUT, outputFile.toString());
-    RedirectBuilder.applyToProcess(redirect, builder);
+    RedirectBuilder.applyAllToProcess(List.of(redirect), builder, createDefaultIoContext());
 
     Process process = builder.start();
     process.waitFor();
@@ -115,7 +131,7 @@ class RedirectBuilderProcessTest {
 
     ProcessBuilder builder = new ProcessBuilder("echo", "appended content");
     Redirect redirect = createRedirect(RedirectType.OUTPUT_APPEND, outputFile.toString());
-    RedirectBuilder.applyToProcess(redirect, builder);
+    RedirectBuilder.applyAllToProcess(List.of(redirect), builder, createDefaultIoContext());
 
     Process process = builder.start();
     process.waitFor();
@@ -132,7 +148,7 @@ class RedirectBuilderProcessTest {
 
     ProcessBuilder builder = new ProcessBuilder("sh", "-c", "echo 'new error' >&2");
     Redirect redirect = createRedirect(RedirectType.ERROR_APPEND, errorFile.toString());
-    RedirectBuilder.applyToProcess(redirect, builder);
+    RedirectBuilder.applyAllToProcess(List.of(redirect), builder, createDefaultIoContext());
 
     Process process = builder.start();
     process.waitFor();
@@ -149,7 +165,7 @@ class RedirectBuilderProcessTest {
 
     ProcessBuilder builder = createEchoCommand("append test");
     Redirect redirect = createRedirect(RedirectType.ALL_APPEND, outputFile.toString());
-    RedirectBuilder.applyToProcess(redirect, builder);
+    RedirectBuilder.applyAllToProcess(List.of(redirect), builder, createDefaultIoContext());
 
     Process process = builder.start();
     process.waitFor();
@@ -166,7 +182,7 @@ class RedirectBuilderProcessTest {
 
     ProcessBuilder builder = createEchoCommand("test");
     Redirect redirect = createRedirect(RedirectType.OUTPUT, outputFile.toString());
-    RedirectBuilder.applyToProcess(redirect, builder);
+    RedirectBuilder.applyAllToProcess(List.of(redirect), builder, createDefaultIoContext());
 
     Process process = builder.start();
     process.waitFor();
@@ -182,7 +198,7 @@ class RedirectBuilderProcessTest {
 
     ProcessBuilder builder = createEchoCommand("test");
     Redirect redirect = createRedirect(RedirectType.ERROR, errorFile.toString());
-    RedirectBuilder.applyToProcess(redirect, builder);
+    RedirectBuilder.applyAllToProcess(List.of(redirect), builder, createDefaultIoContext());
 
     Process process = builder.start();
     process.waitFor();
@@ -196,10 +212,14 @@ class RedirectBuilderProcessTest {
   void applyToProcess_allAppendWithNormalRedirect_throwsException() throws IOException {
     ProcessBuilder builder = new ProcessBuilder("echo", "test");
 
-    Redirect inputRedirect = createRedirect(RedirectType.INPUT, "test.txt");
+    // Create the input file that the test needs
+    Path inputFile = tempDir.resolve("test.txt");
+    Files.writeString(inputFile, "test input content");
+    
+    Redirect inputRedirect = createRedirect(RedirectType.INPUT, inputFile.toString());
 
     try {
-      RedirectBuilder.applyToProcess(inputRedirect, builder);
+      RedirectBuilder.applyAllToProcess(List.of(inputRedirect), builder, createDefaultIoContext());
       assertTrue(true, "Input redirect should work normally");
     } catch (IOException e) {
       assertTrue(false, "Input redirect should not throw exception: " + e.getMessage());
