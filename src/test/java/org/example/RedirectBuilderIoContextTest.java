@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.example.evaluator.IoContext;
-import org.example.evaluator.RedirectBuilder;
+import org.example.evaluator.RedirectHandler;
 import org.example.evaluator.IoContext.Owns;
 import org.example.parser.Redirect;
 import org.example.parser.RedirectType;
@@ -39,7 +39,7 @@ class RedirectBuilderIoContextTest {
 
   @Test
   void applyToIoContext_nullRedirect_returnsSameIoContext() throws IOException {
-    IoContext result = RedirectBuilder.applyAllToIoContext(List.of(), ctx);
+    IoContext result = RedirectHandler.applyAllToIoContext(List.of(), ctx);
     assertSame(ctx, result);
   }
 
@@ -49,7 +49,7 @@ class RedirectBuilderIoContextTest {
     Files.writeString(inputFile, "hello world");
 
     Redirect redirect = createRedirect(RedirectType.INPUT, inputFile.toString());
-    IoContext result = RedirectBuilder.applyAllToIoContext(List.of(redirect), ctx);
+    IoContext result = RedirectHandler.applyAllToIoContext(List.of(redirect), ctx);
 
     assertNotSame(ctx, result);
     assertEquals("hello world", result.in().readLine());
@@ -60,7 +60,7 @@ class RedirectBuilderIoContextTest {
   void applyToIoContext_outputRedirect_createsWriterToFile() throws IOException {
     Path outputFile = tempDir.resolve("output.txt");
     Redirect redirect = createRedirect(RedirectType.OUTPUT, outputFile.toString());
-    IoContext result = RedirectBuilder.applyAllToIoContext(List.of(redirect), ctx);
+    IoContext result = RedirectHandler.applyAllToIoContext(List.of(redirect), ctx);
 
     result.out().println("test output");
     result.out().close();
@@ -72,7 +72,7 @@ class RedirectBuilderIoContextTest {
   void applyToIoContext_errorRedirect_createsWriterToFile() throws IOException {
     Path outputFile = tempDir.resolve("output.txt");
     Redirect redirect = createRedirect(RedirectType.ERROR, outputFile.toString());
-    IoContext result = RedirectBuilder.applyAllToIoContext(List.of(redirect), ctx);
+    IoContext result = RedirectHandler.applyAllToIoContext(List.of(redirect), ctx);
 
     result.err().println("test error");
     result.err().close();
@@ -84,7 +84,7 @@ class RedirectBuilderIoContextTest {
   void applyToIoContext_bothRedirect_createsWriterToFile() throws IOException {
     Path outputFile = tempDir.resolve("output.txt");
     Redirect redirect = createRedirect(RedirectType.ALL_OUTPUT, outputFile.toString());
-    IoContext result = RedirectBuilder.applyAllToIoContext(List.of(redirect), ctx);
+    IoContext result = RedirectHandler.applyAllToIoContext(List.of(redirect), ctx);
 
     result.out().println("test output");
     result.err().println("test error");
@@ -98,7 +98,7 @@ class RedirectBuilderIoContextTest {
   void applyToIoContext_outputRedirectAppend_createsWriterToFile() throws IOException {
     Path outputFile = tempDir.resolve("output.txt");
     Redirect redirect = createRedirect(RedirectType.OUTPUT, outputFile.toString());
-    IoContext result = RedirectBuilder.applyAllToIoContext(List.of(redirect), ctx);
+    IoContext result = RedirectHandler.applyAllToIoContext(List.of(redirect), ctx);
 
     result.out().println("test output");
     result.err().println("test error");
@@ -108,7 +108,7 @@ class RedirectBuilderIoContextTest {
     assertEquals("test output", Files.readString(outputFile).trim());
 
     Redirect redirect2 = createRedirect(RedirectType.OUTPUT_APPEND, outputFile.toString());
-    result = RedirectBuilder.applyAllToIoContext(List.of(redirect2), ctx);
+    result = RedirectHandler.applyAllToIoContext(List.of(redirect2), ctx);
 
     result.out().println("test append output");
     result.err().println("test append error");
@@ -123,7 +123,7 @@ class RedirectBuilderIoContextTest {
   void applyToIoContext_errorRedirectAppend_createsWriterToFile() throws IOException {
     Path outputFile = tempDir.resolve("output.txt");
     Redirect redirect = createRedirect(RedirectType.ERROR, outputFile.toString());
-    IoContext result = RedirectBuilder.applyAllToIoContext(List.of(redirect), ctx);
+    IoContext result = RedirectHandler.applyAllToIoContext(List.of(redirect), ctx);
 
     result.out().println("test output");
     result.err().println("test error");
@@ -133,7 +133,7 @@ class RedirectBuilderIoContextTest {
     assertEquals("test error", Files.readString(outputFile).trim());
 
     Redirect redirect2 = createRedirect(RedirectType.ERROR_APPEND, outputFile.toString());
-    result = RedirectBuilder.applyAllToIoContext(List.of(redirect2), ctx);
+    result = RedirectHandler.applyAllToIoContext(List.of(redirect2), ctx);
 
     result.out().println("test append output");
     result.err().println("test append error");
@@ -148,7 +148,7 @@ class RedirectBuilderIoContextTest {
   void applyToIoContext_bothRedirectAppend_createsWriterToFile() throws IOException {
     Path outputFile = tempDir.resolve("output.txt");
     Redirect redirect = createRedirect(RedirectType.ALL_OUTPUT, outputFile.toString());
-    IoContext result = RedirectBuilder.applyAllToIoContext(List.of(redirect), ctx);
+    IoContext result = RedirectHandler.applyAllToIoContext(List.of(redirect), ctx);
 
     result.out().println("test output");
     result.err().println("test error");
@@ -158,7 +158,7 @@ class RedirectBuilderIoContextTest {
     assertEquals("test output\ntest error", Files.readString(outputFile).trim());
 
     Redirect redirect2 = createRedirect(RedirectType.ALL_APPEND, outputFile.toString());
-    result = RedirectBuilder.applyAllToIoContext(List.of(redirect2), ctx);
+    result = RedirectHandler.applyAllToIoContext(List.of(redirect2), ctx);
 
     result.out().println("test append output");
     result.err().println("test append error");
@@ -181,7 +181,7 @@ class RedirectBuilderIoContextTest {
 
       Path outputFile = tempDir.resolve("output.txt");
       Redirect redirect = createRedirect(RedirectType.OUTPUT, outputFile.toString());
-      IoContext result = RedirectBuilder.applyAllToIoContext(List.of(redirect), freshCtx);
+      IoContext result = RedirectHandler.applyAllToIoContext(List.of(redirect), freshCtx);
 
       result.out().println("test output to file");
       result.err().println("test error to system");
@@ -207,7 +207,7 @@ class RedirectBuilderIoContextTest {
 
       Path outputFile = tempDir.resolve("output.txt");
       Redirect redirect = createRedirect(RedirectType.ERROR, outputFile.toString());
-      IoContext result = RedirectBuilder.applyAllToIoContext(List.of(redirect), freshCtx);
+      IoContext result = RedirectHandler.applyAllToIoContext(List.of(redirect), freshCtx);
 
       result.out().println("test output to system");
       result.err().println("test error to file");
@@ -238,7 +238,7 @@ class RedirectBuilderIoContextTest {
       Files.writeString(inputFile, "test input content");
 
       Redirect redirect = createRedirect(RedirectType.INPUT, inputFile.toString());
-      IoContext result = RedirectBuilder.applyAllToIoContext(List.of(redirect), freshCtx);
+      IoContext result = RedirectHandler.applyAllToIoContext(List.of(redirect), freshCtx);
 
       result.out().println("test output to system");
       result.err().println("test error to system");
@@ -260,7 +260,7 @@ class RedirectBuilderIoContextTest {
     Files.writeString(inputFile, "hello from file");
 
     Redirect redirect = createRedirect(RedirectType.ALL_OUTPUT, inputFile.toString());
-    IoContext result = RedirectBuilder.applyAllToIoContext(List.of(redirect), ctx);
+    IoContext result = RedirectHandler.applyAllToIoContext(List.of(redirect), ctx);
 
     assertSame(ctx.in(), result.in());
 

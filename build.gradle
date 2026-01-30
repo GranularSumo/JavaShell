@@ -46,16 +46,18 @@ jar {
 }
 
 tasks.named('test') {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
+     useJUnitPlatform()
+    
     testLogging {
-        // Only show test summary, not individual tests
-        events "failed", "skipped"  // Don't include "passed"
-        exceptionFormat "short"
-        showStandardStreams = false
+        events "failed", "skipped"  // Keep your current event filtering
+        exceptionFormat "full"      // Changed from "short" - shows full stack traces
+        showCauses true            // Show underlying causes of failures
+        showExceptions true        // Show exception details
+        showStandardStreams = false // Keep as requested
         
+        // Your existing custom summary (unchanged)
         afterSuite { desc, result ->
-            if (!desc.parent) { // Only show for the root suite
+            if (!desc.parent) {
                 def output = "Results: ${result.resultType} (${result.testCount} tests"
                 if (result.successfulTestCount > 0) {
                     output += ", ${result.successfulTestCount} passed"
@@ -71,7 +73,16 @@ tasks.named('test') {
             }
         }
     }
-}
+    
+    // JUnit 5 system properties for enhanced assertion output
+    systemProperty 'junit.jupiter.execution.parallel.enabled', 'false'
+    systemProperty 'junit.jupiter.displayname.generator.default', 'org.junit.jupiter.api.DisplayNameGenerator$ReplaceUnderscores'
+    
+    // Enable parameter names in failure messages
+    jvmArgs = [
+        '-Djunit.platform.output.capture.stdout=true',
+        '-Djunit.platform.output.capture.stderr=true'
+    ]}
 
 tasks.named('run') {
     standardInput = System.in

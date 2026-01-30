@@ -16,7 +16,7 @@ import java.util.List;
 import org.example.evaluator.IoContext.Owns;
 import org.example.parser.Redirect;
 
-public class RedirectBuilder {
+public class RedirectHandler {
 
   public static IoContext applyAllToIoContext(List<Redirect> redirects, IoContext io) throws IOException {
     if (redirects.isEmpty()) {
